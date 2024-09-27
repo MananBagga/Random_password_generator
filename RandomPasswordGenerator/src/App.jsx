@@ -1,6 +1,4 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import './App.css'
 
 function App() {
@@ -8,7 +6,39 @@ function App() {
   const [numbersAllowed, setNumbersAllowed] = useState(false)
   const [charAllowed, setCharAllowed] = useState(false)
   const [password, setPassword] = useState('')
+  const passwordRef = useRef(null)
 
+  const generatePassword = useCallback(() => {
+    // useCallback caches a function and does not loads a function again and again while re rendering a page 
+    let pass = ""
+    let str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+    
+    if (numbersAllowed) {
+      str += "0123456789"
+    }
+
+    if (charAllowed) {
+      str += "!@#$%^&*()_+"
+    }
+
+    for (let i = 1; i < length; i++){
+      const index = Math.floor(Math.random() * str.length + 1)
+      pass += str.charAt(index)
+    }
+
+    setPassword(pass)
+  }, [length, numbersAllowed, charAllowed ])
+  //We pass the dependency array and in this we pass the elements which should re runs the functions (ignoring the cache) after any one of it is changed.
+
+  useEffect(() => {
+    generatePassword()
+  }, [length, numbersAllowed, charAllowed])
+  //with useEffect dependency array, we want things to re run again as soon as something changes
+
+   const copyPasswordToClipboard = () => {
+      window.navigator.clipboard.writeText(password)
+      passwordRef.current?.select() 
+   }
 
   return (
     <div className='w-full max-w-md mx-auto shadow-md rounded-lg px-4 py-3 my-60 bg-gray-800 text-orange-500'>
@@ -21,10 +51,11 @@ function App() {
           className='outline-none w-full py-1 px-3'
           placeholder='Password'
           readOnly 
-          
+          ref={passwordRef}
           />
 
           <button
+          onClick={copyPasswordToClipboard}
           className='outline-none bg-blue-700 text-white px-3 py-0.5 shrink-0'
           >Copy</button>
       </div>
@@ -57,7 +88,7 @@ function App() {
             type="checkbox"
             defaultChecked={charAllowed}
             onChange={() => {
-              setNumbersAllowed((prev) => !prev)
+              setCharAllowed((prev) => !prev)
             }} />
             <label htmlFor="charInput">Character</label>
           </div>
